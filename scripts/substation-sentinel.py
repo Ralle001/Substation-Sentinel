@@ -346,7 +346,7 @@ def encode_and_update_sv(p, gd, new_sv_id):
     # Return the modified packet
     return modified_packet
 
-def attack(p, gd, type, replay, rename, change_boolean_value, change_bit_string):
+def attack(p, gd, type, replay, rename, change_boolean_value):
     skip = False
     modified_packet = ""
     if replay:
